@@ -10,11 +10,11 @@
 ### Endpoints Overview
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /students | Get all students |
-| GET | /students/{id} | Get a student by id |
-| POST | /students | Create a new student |
-| PATCH | /students/{id} | Update Student info |
-| DELETE | /students/{id} | Delete a Student Record |
+| GET | /api/v1/students | Get all students |
+| GET | /api/v1/students/{id} | Get a student by id |
+| POST | /api/v1/students | Create a new student |
+| PATCH | /api/v1/students/{id} | Update Student info |
+| DELETE | /api/v1/students/{id} | Delete a Student Record |
 
 ### Data Models
 Student Model:
