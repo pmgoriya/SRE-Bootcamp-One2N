@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from database import SessionDep, Student
 from sqlmodel import text, select
 from models import StudentCreate, StudentRead
@@ -22,3 +22,10 @@ def create_student(student: StudentCreate, session: SessionDep):
     session.refresh(new_student)
     
     return StudentRead.model_validate(new_student.model_dump())
+
+@app.get("/students/{id}", response_model=StudentRead)
+def get_student(id: int, session: SessionDep):
+    student = session.get(Student, id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student Not Found")
+    return student
