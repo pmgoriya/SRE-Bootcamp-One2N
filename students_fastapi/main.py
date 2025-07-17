@@ -29,3 +29,18 @@ def get_student(id: int, session: SessionDep):
     if not student:
         raise HTTPException(status_code=404, detail="Student Not Found")
     return student
+
+
+
+
+
+
+@app.delete("/students/{id}")
+def delete_student(id:int, session: SessionDep):
+    student = session.get(Student, id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student Not Found")
+    session.delete(student)
+    session.commit()
+
+    return {"ok": True}
