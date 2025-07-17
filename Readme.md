@@ -37,3 +37,12 @@ Student Model:
 - Config managed via env variable using python-dotenv
 - Create a .env file based on .env.example and fill in your local DB credentials.
 
+###  Postman Collection
+
+You can import the API collection in Postman by using the `openapi_spec.json` file in the root directory.
+
+Steps:
+- Open Postman
+- Click on `Import`
+- Select `File` and upload `openapi_spec.json`
+- The collection will be automatically created with all endpoints
