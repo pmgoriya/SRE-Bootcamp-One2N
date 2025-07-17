@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from database import SessionDep, Student
 from sqlmodel import text, select
-from models import StudentCreate, StudentRead
-# from datetime import datetime, timezone
+from models import StudentCreate, StudentRead, StudentUpdate
+from datetime import datetime, timezone
 
 
 app = FastAPI()
@@ -30,9 +30,22 @@ def get_student(id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Student Not Found")
     return student
 
+@app.patch("/students/{id}", response_model=StudentRead)
+def update_student(id: int, student_update: StudentUpdate, session: SessionDep):
+    student = session.get(Student, id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student Not Found")
+    student_data = student_update.model_dump(exclude_unset=True) # so that he is not able to pass None and exclude the data which is already present
+    student.sqlmodel_update(student_data)
 
+    #manually updating the updated_at
+    student.updated_at = datetime.now(timezone.utc)
 
+    session.add(student)
+    session.commit()
+    session.refresh(student)
 
+    return student
 
 
 @app.delete("/students/{id}")
