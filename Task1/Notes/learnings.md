@@ -32,3 +32,11 @@
 - paginate results
 - standard responses (proper status codes)
 - document it
+
+### Threads, Async and multiple worker nodes
+
+* async is when a process that is occupying some time wont stop the cpu from doing the other tasks
+* thread is when there is fast context switching and so it appears that it multiple processes are running, but its just 1 but multiple hat switching
+* multiple worker nodes are like different linux processes
+* concurrency multiple tasks in progress at same time, not necessarily same moment(async and threads)
+* parallelism multiple tasks actually executing at the same time. (gunicorn)
