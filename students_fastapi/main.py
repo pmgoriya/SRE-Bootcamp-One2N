@@ -89,3 +89,8 @@ def healthcheck(session: SessionDep):
     except Exception as e:
         logger.error(f"Healthcheck failed: {e}")
         return {"status": "error", "db": "disconnected"}
+    
+
+#For tests to run successfully, need to expose router
+
+app.include_router(v1_router)
