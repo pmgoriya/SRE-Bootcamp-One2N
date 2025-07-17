@@ -17,8 +17,8 @@ class Student(SQLModel, table=True):
     last_name: str = Field(sa_column=Column(String, nullable=False))
     email: str = Field(sa_column=Column(String, nullable=False))
     age: int | None = None
-    created_at: datetime = Field(default_factory=datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)) # use lambda coz default_factory expects to call a function, each time new instance is created
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 
