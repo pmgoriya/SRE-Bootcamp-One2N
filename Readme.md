@@ -35,3 +35,5 @@ Student Model:
 
 ### Environment Config
 - Config managed via env variable using python-dotenv
+- Create a .env file based on .env.example and fill in your local DB credentials.
+
