@@ -46,3 +46,13 @@ Steps:
 - Click on `Import`
 - Select `File` and upload `openapi_spec.json`
 - The collection will be automatically created with all endpoints
+
+### How to run the application on your machine
+
+- Prerequisites: docker and python installed
+- Create a .env file within students_fastapi directory in the format given in env.example
+- Follow the instructions given in makefile in order
+
+### Unit tests
+
+* For each endpoints are defined in tests using pytest, follow the makefile to run it accordingly.
