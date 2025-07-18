@@ -5,7 +5,6 @@
 NETWORK_NAME=myapp-net
 
 .PHONY: network db-up build build-dev migrate run test clean-db
-up: db-up migrate build run
 
 network:
 	docker network ls --format '{{.Name}}' | grep -q '^$(NETWORK_NAME)$$' || \
@@ -40,12 +39,8 @@ migrate: build-dev
 	students_fastapi-builder:1.0.0 \
 	alembic upgrade head
 
-run:
-	docker run \
-	--network $(NETWORK_NAME) \
-	--env-file students_fastapi/.env \
-	-p 8000:8000 \
-	students_fastapi:1.0.0
+run: db-up migrate build
+	NETWORK_NAME=$(NETWORK_NAME) docker compose up
 
 test: build-dev
 	docker run --rm \

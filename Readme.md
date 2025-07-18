@@ -49,9 +49,19 @@ Steps:
 
 ### How to run the application on your machine
 
-- Prerequisites: docker and python installed
-- Create a .env file within students_fastapi directory in the format given in env.example because this will be used in the makefile and docker containers
-- Follow the instructions given in makefile in order (To just build from start to end type `make up`)
+* Clone the repo
+
+* Run chmod +x install-prereq.sh && ./install-prereq.sh
+
+* Create a .env file within students_fastapi directory in the format given in env.example because this will be used in the makefile and docker containers
+
+* Follow the instructions given in Makefile in order (To just build from start to end type make run)
+
+* To run tests, use make test
+
+* To stop and remove the Postgres container, use make clean-db
+
+
 
 ### Unit tests
 

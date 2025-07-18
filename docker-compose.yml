@@ -1,0 +1,14 @@
+name: api
+services:
+    students_fastapi:
+        networks:
+            - app_network
+        env_file:
+            - students_fastapi/.env
+        ports:
+            - 8000:8000
+        image: students_fastapi:1.0.0
+networks:
+    app_network:
+        external: true
+        name: ${NETWORK_NAME}
