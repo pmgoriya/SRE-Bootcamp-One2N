@@ -7,7 +7,7 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
 
 echo "Docker installed"
-
+rm -rf get-docker.sh
 echo " Install docker-compose plugin.."
 
 mkdir -p ~/.docker/cli-plugins
