@@ -50,8 +50,8 @@ Steps:
 ### How to run the application on your machine
 
 - Prerequisites: docker and python installed
-- Create a .env file within students_fastapi directory in the format given in env.example
-- Follow the instructions given in makefile in order
+- Create a .env file within students_fastapi directory in the format given in env.example because this will be used in the makefile and docker containers
+- Follow the instructions given in makefile in order (To just build from start to end type `make up`)
 
 ### Unit tests
 

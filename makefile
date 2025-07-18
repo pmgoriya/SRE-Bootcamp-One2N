@@ -1,35 +1,60 @@
+# v2
+
 -include .env.make
 
+NETWORK_NAME=myapp-net
 
-.PHONY: venv install db-up migrate run test clean-db
+.PHONY: network db-up build build-dev migrate run test clean-db
+up: db-up migrate build run
 
-venv:
-	@test -d students_fastapi/env || python3 -m venv students_fastapi/env
+network:
+	docker network ls --format '{{.Name}}' | grep -q '^$(NETWORK_NAME)$$' || \
+	docker network create $(NETWORK_NAME)
+	@echo "✅ Docker network '$(NETWORK_NAME)' is ready."
 
-install:
-	students_fastapi/env/bin/pip install -r students_fastapi/requirements.txt
-
-db-up:
-	docker ps -a --format '{{.Names}}' | grep -q '^postgres$$' || \
-	docker run --name $(DB_CONTAINER_NAME) -e POSTGRES_PASSWORD=$(DB_PASSWORD) -p 5432:5432 -d postgres
-	@echo "🚀 Postgres is running."
-	@echo "📄 Now update your .env file from the env you passed above and the format specified in the env.example"
-
-
-migrate:
-	cd students_fastapi && \
-	../students_fastapi/env/bin/python3 -m alembic upgrade head || \
-	( \
-		test -z "$(ls alembic/versions/)" && \
-		../students_fastapi/env/bin/alembic revision --autogenerate -m "Initial migration" && \
-		../students_fastapi/env/bin/alembic upgrade head \
+db-up: network
+	docker ps -a --format '{{.Names}}' | grep -q '^$(DB_CONTAINER_NAME)$$' || ( \
+		docker run --name $(DB_CONTAINER_NAME) \
+		--network $(NETWORK_NAME) \
+		-e POSTGRES_DB=$(DB_NAME) \
+		-e POSTGRES_USER=$(DB_USER) \
+		-e POSTGRES_PASSWORD=$(DB_PASSWORD) \
+		-p $(DB_PORT):5432 \
+		-d postgres && \
+		echo "🚀 Postgres container $(DB_CONTAINER_NAME) is running on port $(DB_PORT)" \
 	)
 
-run:
-	cd students_fastapi && ../students_fastapi/env/bin/uvicorn main:app --reload
+build:
+	docker build -t students_fastapi:1.0.0 .
 
-test:
-	students_fastapi/env/bin/pytest students_fastapi/tests
+build-dev:
+	docker build --target builder -t students_fastapi-builder:1.0.0 .
+
+migrate: build-dev
+# there is need for path and pythonpath because docker doesnt know where to pickup those values from
+	docker run --rm \
+	--network $(NETWORK_NAME) \
+	--env-file students_fastapi/.env \
+	-e PATH="/install/bin:$PATH" \
+	-e PYTHONPATH="/install/lib/python3.12/site-packages" \
+	students_fastapi-builder:1.0.0 \
+	alembic upgrade head
+
+run:
+	docker run \
+	--network $(NETWORK_NAME) \
+	--env-file students_fastapi/.env \
+	-p 8000:8000 \
+	students_fastapi:1.0.0
+
+test: build-dev
+	docker run --rm \
+	--network $(NETWORK_NAME) \
+	--env-file students_fastapi/.env \
+	-e PATH="/install/bin:$PATH" \
+	-e PYTHONPATH="/install/lib/python3.12/site-packages" \
+	students_fastapi-builder:1.0.0 \
+	pytest students_fastapi/tests
 
 clean-db:
-	docker stop postgres-student && docker rm postgres-student
+	docker stop $(DB_CONTAINER_NAME) && docker rm $(DB_CONTAINER_NAME)
