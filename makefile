@@ -54,7 +54,7 @@ test: build-dev
 	-e PATH="/install/bin:$PATH" \
 	-e PYTHONPATH="/install/lib/python3.12/site-packages" \
 	students_fastapi-builder:1.0.0 \
-	pytest students_fastapi/tests
+	pytest tests
 
 clean-db:
 	docker stop $(DB_CONTAINER_NAME) && docker rm $(DB_CONTAINER_NAME)
