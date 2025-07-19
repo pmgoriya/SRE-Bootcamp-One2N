@@ -1,6 +1,5 @@
 # v2
 
--include .env.make
 
 NETWORK_NAME=myapp-net
 
