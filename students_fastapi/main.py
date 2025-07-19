@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, APIRouter
 from database import SessionDep, Student
-from sqlmodel import text, select
+from sqlmodel import select
 from models import StudentCreate, StudentRead, StudentUpdate
 from datetime import datetime, timezone
 from logging_config import setup_logging

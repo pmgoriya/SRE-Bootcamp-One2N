@@ -4,7 +4,7 @@
 
 NETWORK_NAME=myapp-net
 
-.PHONY: network db-up build build-dev migrate run test clean-db
+.PHONY: network db-up build build-dev migrate run test clean-db lint
 
 network:
 	docker network ls --format '{{.Name}}' | grep -q '^$(NETWORK_NAME)$$' || \
@@ -53,3 +53,6 @@ test: build-dev
 
 clean-db:
 	docker stop $(DB_CONTAINER_NAME) && docker rm $(DB_CONTAINER_NAME)
+
+lint:
+	ruff check students_fastapi/ --fix

@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from database import Student
 from datetime import datetime
 
 class StudentCreate(BaseModel):
