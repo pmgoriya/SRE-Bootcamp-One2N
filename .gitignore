@@ -3,4 +3,4 @@ __pycache__
 .env
 get-docker.sh
 actions-runner/
-vagrant
+.vagrant
