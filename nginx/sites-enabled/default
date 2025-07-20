@@ -1,0 +1,15 @@
+upstream backend_app {
+    server api1:8000;
+    server api2:8000;
+}
+
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://backend_app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
