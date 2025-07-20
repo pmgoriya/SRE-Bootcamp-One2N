@@ -15,7 +15,7 @@ venv/
 *.bak
 .git
 .gitignore
-
+vagrant
 .vscode/
 .idea/
 actions-runner/
