@@ -20,6 +20,6 @@ echo "DockerCompose installed"
 
 echo "installing make"
 sudo apt install -y make
-make install
+# make install
 
 echo "setup complete"
