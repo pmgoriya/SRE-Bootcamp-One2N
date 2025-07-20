@@ -5,7 +5,7 @@ sudo apt update
 echo "Install docker from get.docker.com"
 curl -fsSL https://get.docker.com -o get-docker.sh
 sh get-docker.sh
-
+sudo usermod -aG docker $USER 
 echo "Docker installed"
 rm -rf get-docker.sh
 echo " Install docker-compose plugin.."

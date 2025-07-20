@@ -1,6 +1,6 @@
 # v2
-
-
+include students_fastapi/.env
+export
 NETWORK_NAME=myapp-net
 
 .PHONY: network db-up build build-dev migrate run test clean-db lint
@@ -11,15 +11,13 @@ network:
 	@echo "✅ Docker network '$(NETWORK_NAME)' is ready."
 
 db-up: network
-	docker ps -a --format '{{.Names}}' | grep -q '^$(DB_CONTAINER_NAME)$$' || ( \
-		docker run --name $(DB_CONTAINER_NAME) \
+	docker ps -a --format '{{.Names}}' | grep -q '^$(DB_HOST)$$' || ( \
+		docker run --name $(DB_HOST) \
 		--network $(NETWORK_NAME) \
-		-e POSTGRES_DB=$(DB_NAME) \
-		-e POSTGRES_USER=$(DB_USER) \
-		-e POSTGRES_PASSWORD=$(DB_PASSWORD) \
+		--env-file students_fastapi/.env \
 		-p $(DB_PORT):5432 \
 		-d postgres && \
-		echo "🚀 Postgres container $(DB_CONTAINER_NAME) is running on port $(DB_PORT)" \
+		echo "🚀 Postgres container $(DB_HOST) is running on port $(DB_PORT)" \
 	)
 
 build:
