@@ -9,6 +9,7 @@ services:
           - students_fastapi/.env
       ports:
           - 8081:8000
+      build: .
       image: students_fastapi:1.0.0
 
     api2:
@@ -19,6 +20,7 @@ services:
           - students_fastapi/.env
       ports:
           - 8082:8000
+      build: .
       image: students_fastapi:1.0.0
 
     nginx:
@@ -32,7 +34,7 @@ services:
       networks:
           - app_network      
       volumes:
-          - nginx
+          - ./nginx/sites-enabled/default:/etc/nginx/sites-enabled/default:ro
 
 
 networks:

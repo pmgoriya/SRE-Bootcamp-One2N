@@ -51,3 +51,6 @@ clean-db:
 
 lint:
 	ruff check students_fastapi/ --fix
+
+vagrant-deployment:
+	docker compose -f docker-compose.vagant.yml up
