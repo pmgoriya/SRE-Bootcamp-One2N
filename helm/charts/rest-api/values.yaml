@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: pmgoriya/one2n-sre-bootcamp
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+initImage:
+  repository: pmgoriya/one2n-sre-bootcamp
+  tag: builder
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 8000
+  targetPort: 8000
+
+nodeSelector:
+  type: application
+
+ingress:
+  enabled: false
+
+resources: {}
+
+envFrom:
+  secrets:
+    - name: database-credentials
+  configMaps:
+    - name: database-config

@@ -1,0 +1,35 @@
+fullnameOverride: "postgres"
+
+architecture: standalone
+
+auth:
+  existingSecret: "database-credentials"
+  secretKeys:
+    # Admin keys (in case the chart still uses these)
+    adminPasswordKey: "POSTGRES_PASSWORD"
+    adminUsernameKey: "POSTGRES_USERNAME"
+    # User keys (for custom user creation)
+    userPasswordKey: "POSTGRES_PASSWORD"
+    usernameKey: "POSTGRES_USERNAME"
+  database: "postgres"
+  enablePostgresUser: false  # This ensures it uses the username from secret
+  allowEmptyPassword: false
+primary:
+  nodeSelector:
+    type: database
+
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: "csi-hostpath-wffc"
+    size: "1Gi"
+
+  service:
+    type: ClusterIP
+    clusterIP: None
+
+  # Alternative: Set environment variables directly
+  extraEnvVarsSecret: "database-credentials"
+
+commonLabels:
+  app: db

@@ -61,7 +61,8 @@ Steps:
 
 * To stop and remove the Postgres container, use make clean-db
 
-
+### Deployment using k8s and helm
+- Their respective steps are elaborated within their respective folders using a md. Please open that folder for checking it out.
 
 ### Unit tests
 

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      restartPolicy: Always
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          envFrom:
+            {{- range .Values.envFrom.secrets }}
+            - secretRef:
+                name: {{ .name }}
+            {{- end }}
+            {{- range .Values.envFrom.configMaps }}
+            - configMapRef:
+                name: {{ .name }}
+            {{- end }}
+      initContainers:
+        - name: db-migrations
+          image: "{{ .Values.initImage.repository }}:{{ .Values.initImage.tag }}"
+          imagePullPolicy: {{ .Values.initImage.pullPolicy | default "IfNotPresent" }}
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            {{- range .Values.envFrom.secrets }}
+            - secretRef:
+                name: {{ .name }}
+            {{- end }}
+            {{- range .Values.envFrom.configMaps }}
+            - configMapRef:
+                name: {{ .name }}
+            {{- end }}
+          env:
+            - name: PATH
+              value: "/install/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            - name: PYTHONPATH
+              value: "/install/lib/python3.12/site-packages"

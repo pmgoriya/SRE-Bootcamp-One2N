@@ -1,0 +1,11 @@
+server:
+  dataStorage:
+    storageClass: csi-hostpath-wffc
+    size: 100Mi
+
+  securityContext:
+    runAsUser: 100
+    fsGroup: 100
+
+  nodeSelector:
+    type: dependent_services
