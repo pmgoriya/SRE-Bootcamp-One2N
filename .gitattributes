@@ -1,0 +1,3 @@
+helm/charts/vault/** linguist-vendored
+helm/charts/external-secrets/** linguist-vendored
+helm/charts/postgresql/** linguist-vendored
