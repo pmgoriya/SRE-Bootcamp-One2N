@@ -37,6 +37,22 @@ spec:
               name: database-credentials
           - configMapRef:
               name: database-config
+        livenessProbe:
+          httpGet:
+            path: /api/v1/healthcheck
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/healthcheck
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
       initContainers:
       - name: db-migrations
         image: pmgoriya/one2n-sre-bootcamp:builder
