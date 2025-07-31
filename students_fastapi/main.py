@@ -85,7 +85,7 @@ def healthcheck(session: SessionDep):
     try:
         session.exec(select(Student).limit(1)).first()
         logger.info("Database connection is healthy")
-        return {"status": "ok", "db": "connected to the db"}
+        return {"status": "ok", "db": "connected"}
     except Exception as e:
         logger.error(f"Healthcheck failed: {e}")
         return {"status": "error", "db": "disconnected"}
