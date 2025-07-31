@@ -13,7 +13,7 @@ spec:
     path: helm/student-api-stack
     helm:
       valueFiles:
-        - vaules.yaml
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: student-api

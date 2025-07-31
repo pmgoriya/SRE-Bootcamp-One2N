@@ -1,6 +1,5 @@
 Student API - How to Deploy with Helm on Kubernetes
 This guide tell you how to use this repo to deploy Student API app on a Kubernetes cluster with Helm. Follow steps to setup infrastructure, Vault, and app stack. All config files already in repo, so you just run commands.
-
 What You Need
 
 Minikube installed and running
@@ -8,7 +7,6 @@ Helm installed
 kubectl setup for Minikube context
 Postman to test API
 Repo cloned with helm/values folder ready
-
 
 Step 1: Setup Infrastructure
 Start Minikube and Label Nodes
@@ -21,7 +19,7 @@ kubectl label node one2n-m03 type=dependent_services
 
 Setup StorageClass
 Vault need special StorageClass. Run this to create it:
-`kubectl apply -f - <<EOF
+kubectl apply -f - <<EOF
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -29,11 +27,10 @@ metadata:
 provisioner: hostpath.csi.k8s.io
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete
-EOF`
+EOF
 
 Enable CSI driver addon:
 minikube addons enable csi-hostpath-driver -p one2n
-
 
 Step 2: Setup Vault (Manual)
 Deploy Vault
@@ -72,7 +69,6 @@ kubectl create secret generic vault-token \
   --from-literal=token=<vault_token_here> \
   -n student-api
 
-
 Step 3: Deploy External Secrets Operator
 Run this to install External Secrets Operator:
 helm install external-secrets ./charts/external-secrets \
@@ -80,7 +76,6 @@ helm install external-secrets ./charts/external-secrets \
   --namespace external-secrets \
   --create-namespace \
   --wait
-
 
 Step 4: Deploy App Stack
 Deploy Umbrella Chart
@@ -95,7 +90,6 @@ helm dependency build
 
 # Deploy app stack
 helm install student-api-stack . --namespace student-api --wait --timeout=15m
-
 
 Step 5: Test and Verify
 Test API
@@ -116,7 +110,6 @@ kubectl describe externalsecret -n student-api
 
 # Check External Secrets Operator
 kubectl get pods -n student-api -l app.kubernetes.io/name=external-secrets
-
 
 Quick Commands to Deploy
 Run these commands in order for full deployment:
@@ -148,7 +141,6 @@ helm uninstall external-secrets -n external-secrets
 helm uninstall vault -n vault
 kubectl delete ns student-api vault
 
-
 Repo Structure
 helm/
 ├── charts/
@@ -164,7 +156,6 @@ helm/
 │   └── templates/
 ├── values/                           # Config files
 └── student-api-helm-deploy.md        # This guide
-
 
 Troubleshoot Tips
 Vault Issues
@@ -190,3 +181,61 @@ Resource Conflicts
 
 If see “exists and cannot be imported” error, clean dependencies and rebuild
 Check Chart.yaml in student-api-stack match setup
+
+Step 6: Setup ArgoCD and CI/CD Pipeline
+Deploy ArgoCD
+Install ArgoCD to manage the application deployment:
+kubectl create namespace argocd
+helm install argocd argo/argo-cd -f argocd/argocd-values.yaml --namespace argocd
+
+Access the ArgoCD UI:
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+Open https://localhost:8080 in a browser. Use username admin and get the password:
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d
+
+Configure ArgoCD Application
+Apply the ArgoCD application configuration to monitor the Helm chart:
+kubectl apply -f argocd/argocd-application.yaml
+
+Configure Repository Secret
+Apply the repository secret for ArgoCD to access the Git repository:
+kubectl apply -f argocd/argocd-repo-secret.yaml
+
+Source of Truth
+The source of truth for the application is the helm/student-api-stack/values.yaml file in the Git repository (https://github.com/pmgoriya/SRE-Bootcamp-One2N.git, master branch). ArgoCD monitors this file and automatically syncs changes to the student-api namespace when the rest-api.image.tag is updated by the CI pipeline.
+CI/CD Pipeline
+The CI pipeline is defined in .github/workflows/ci.yml. It:
+
+Triggers on pushes to master with changes in students_fastapi/ or manually via workflow_dispatch.
+Runs linters, builds a Docker image (pmgoriya/one2n-sre-bootcamp:<version>), and pushes it to Docker Hub.
+Uses semantic-release to bump the version in package.json based on Conventional Commits (feat:, fix:).
+Updates helm/student-api-stack/values.yaml with the new image tag and commits with [skip ci].
+Requires contents: write permissions for GITHUB_TOKEN.
+
+To trigger the pipeline manually:
+
+Go to the GitHub repository (https://github.com/pmgoriya/SRE-Bootcamp-One2N).
+Navigate to the Actions tab, select ci, and click Run workflow.
+
+Run CI Pipeline Locally
+Run the existing ./run.sh script to simulate the CI pipeline locally:
+./run.sh
+
+Troubleshoot ArgoCD and CI/CD
+
+ArgoCD Sync Issues:
+
+Verify repository secret: kubectl get secret -n argocd -l argocd.argoproj.io/secret-type=repository
+Check application: argocd app get student-api-stack -n argocd
+Force sync: argocd app sync student-api-stack -n argocd
+Check logs: kubectl logs -n argocd -l app.kubernetes.io/name=argocd-application-controller
+
+
+CI Pipeline Issues:
+
+Check Actions logs in GitHub for semantic-release or Docker errors.
+Verify package.json and values.yaml updates after runs.
+Ensure Conventional Commits (feat:, fix:) for version bumps.
+
+
