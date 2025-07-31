@@ -60,9 +60,9 @@ jobs:
 
             - name: Update Helm Values
               run: |
-                sed -i "s|image: pmgoriya/one2n-sre-bootcamp:.*|image: $IMAGE_NAME:v${{ steps.get_version.outputs.NEW_VERSION }}|" helm/student-api-stack/values.yaml
+                sed -i "/rest-api:/,/image:/s|tag: \".*\"|tag: \"v${{ steps.get_version.outputs.NEW_VERSION }}\"|" helm/student-api-stack/values.yaml
                 git config user.name "GitHub Action"
                 git config user.email "action@github.com"
-                git add helm/student-api-stack/values.yaml
-                git commit -m "chore: update image tag to v${{ steps.get_version.outputs.NEW_VERSION }} [skip ci]"
-                git push
+                git add helm/student-api-stack/values.yaml package.json
+                git diff --staged --quiet || git commit -m "chore: update image tag to v${{ steps.get_version.outputs.NEW_VERSION }} [skip ci]"
+                git push || echo "No changes to push"
