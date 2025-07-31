@@ -1,5 +1,12 @@
 {
   "name": "one2n-sre-bootcamp",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "semantic-release": "^22.0.12"
+  }
 }
