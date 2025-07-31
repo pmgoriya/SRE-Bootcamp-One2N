@@ -4,3 +4,4 @@ __pycache__
 get-docker.sh
 actions-runner/
 .vagrant
+argocd-repo-secret.yaml

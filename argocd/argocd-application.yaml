@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: student-api-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/pmgoriya/SRE-Bootcamp-One2N.git
+    targetRevision: master
+    path: helm/student-api-stack
+    helm:
+      valueFiles:
+        - vaules.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: student-api
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,37 +1,27 @@
-# Student API - End-to-End Kubernetes Helm Deployment Guide
+Student API - How to Deploy with Helm on Kubernetes
+This guide tell you how to use this repo to deploy Student API app on a Kubernetes cluster with Helm. Follow steps to setup infrastructure, Vault, and app stack. All config files already in repo, so you just run commands.
 
-This document outlines the step-by-step Helm-based deployment process for the Student API app, following the strict chart structure and configuration separation.
+What You Need
 
----
+Minikube installed and running
+Helm installed
+kubectl setup for Minikube context
+Postman to test API
+Repo cloned with helm/values folder ready
 
-## Prerequisites
 
-- Minikube installed and running
-- Helm installed
-- `kubectl` configured with Minikube context
-- Postman (for API testing)
-- All `values.yaml` files prepared inside the `helm/values` directory
-
----
-
-## 1. Start Minikube and Label Nodes
-
-```bash
+Step 1: Setup Infrastructure
+Start Minikube and Label Nodes
+Start Minikube with 3 nodes and label them for app, database, and services:
 minikube start --nodes=3 -p one2n
 
-kubectl label node one2n type=application
-kubectl label node one2n-m02 type=database
+kubectl label node one2n type=application &&
+kubectl label node one2n-m02 type=database &&
 kubectl label node one2n-m03 type=dependent_services
-```
 
----
-
-## 2. Set Up a Compatible StorageClass
-
-Vault requires a storage class that supports `fsGroup`. Default `minikube-hostpath` won’t work.
-
-```bash
-kubectl apply -f - <<EOF
+Setup StorageClass
+Vault need special StorageClass. Run this to create it:
+`kubectl apply -f - <<EOF
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -39,138 +29,127 @@ metadata:
 provisioner: hostpath.csi.k8s.io
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Delete
-EOF
-```
+EOF`
 
-Also make sure this addon is enabled:
-
-```bash
+Enable CSI driver addon:
 minikube addons enable csi-hostpath-driver -p one2n
-```
 
----
 
-## 3. Deploy Vault
-
-```bash
+Step 2: Setup Vault (Manual)
+Deploy Vault
+Install Vault using Helm chart in repo:
 helm install vault ./charts/vault \
   -f values/vault-values.yaml \
   --namespace vault \
   --create-namespace
-```
 
----
-
-## 4. Deploy External Secrets Operator (ESO)
-
-```bash
-helm install external-secrets ./charts/external-secrets \
-  -f values/external-secrets-values.yaml \
-  --namespace external-secrets \
-  --create-namespace
-```
-
----
-
-## 5. Initialize and Unseal Vault
-
-```bash
+Initialize and Unseal Vault
+Get into Vault pod and init it:
 kubectl exec -it vault-0 -n vault -- /bin/sh
 vault operator init
+
+Save unseal keys and root token somewhere safe! Unseal Vault with:
 vault operator unseal <key1>
 vault operator unseal <key2>
 vault operator unseal <key3>
 
+Login and enable secrets:
 vault login <root-token>
 vault secrets enable -path=secret kv
-```
 
-Now store the credentials:
-
-```bash
+Store DB Credentials
+Add database credentials to Vault:
 vault kv put secret/database/creds \
   DB_USER=<username> POSTGRES_USER=<username> \
   DB_PASSWORD=<password> POSTGRES_PASSWORD=<password>
-```
 
-Then generate a Vault token and store it in Kubernetes:
-
-```bash
+Create Vault Token
+Create token for external secrets and store in Kubernetes:
 vault token create
 kubectl create ns student-api
 
 kubectl create secret generic vault-token \
   --from-literal=token=<vault_token_here> \
   -n student-api
-```
 
----
 
-## 6. Deploy Secrets Bridge (SecretStore + ExternalSecret)
+Step 3: Deploy External Secrets Operator
+Run this to install External Secrets Operator:
+helm install external-secrets ./charts/external-secrets \
+  -f values/external-secrets-values.yaml \
+  --namespace external-secrets \
+  --create-namespace \
+  --wait
 
-```bash
-helm install secrets-bridge ./charts/secrets-bridge \
-  -f values/secrets-bridge-values.yaml \
-  --namespace student-api
-```
 
----
+Step 4: Deploy App Stack
+Deploy Umbrella Chart
+Go to umbrella chart folder and deploy everything:
+cd helm/student-api-stack
 
-## 7. Deploy PostgreSQL (Uses Secret Ref)
+# Clean old dependencies
+rm -rf charts/ Chart.lock
 
-```bash
-helm install postgres ./charts/postgresql \
-  -f values/postgresql-values.yaml \
-  --namespace student-api
-```
+# Build dependencies
+helm dependency build
 
-Wait for DB pods to be fully up and healthy before moving forward.
+# Deploy app stack
+helm install student-api-stack . --namespace student-api --wait --timeout=15m
 
----
 
-## 8. Deploy FastAPI REST Application
-
-```bash
-helm install rest-api ./charts/rest-api \
-  -f values/rest-api-values.yaml \
-  --namespace student-api
-```
-
----
-
-## 9. Test the API with Postman
-
-Get the IP and NodePort:
-
-```bash
+Step 5: Test and Verify
+Test API
+Get service details to test API in Postman:
 kubectl get svc -n student-api
 minikube ip -p one2n
-```
 
-Use `<minikube-ip>:<node-port>` as the base URL in your Postman collection.
+Use <minikube-ip>:<node-port> as base URL in Postman.
+Check Everything
+Verify all components running:
+# Check pods
+kubectl get pods -n student-api
+kubectl get pods -n vault
 
-Make sure all endpoints behave as expected.
+# Check secrets
+kubectl get secrets -n student-api
+kubectl describe externalsecret -n student-api
 
----
+# Check External Secrets Operator
+kubectl get pods -n student-api -l app.kubernetes.io/name=external-secrets
 
-## 10. Cleanup (Optional)
 
-```bash
-helm uninstall rest-api -n student-api
-helm uninstall postgres -n student-api
-helm uninstall secrets-bridge -n student-api
+Quick Commands to Deploy
+Run these commands in order for full deployment:
+# Infrastructure
+minikube start --nodes=3 -p one2n
+kubectl label node one2n type=application
+kubectl label node one2n-m02 type=database
+kubectl label node one2n-m03 type=dependent_services
+kubectl apply -f helm/values/storageclass.yaml
+minikube addons enable csi-hostpath-driver -p one2n
 
+# Vault
+helm install vault ./charts/vault -f values/vault-values.yaml --namespace vault --create-namespace
+# ... do vault init, unseal, and config (see Step 2) ...
+
+# External Secrets
+helm install external-secrets ./charts/external-secrets -f values/external-secrets-values.yaml --namespace external-secrets --wait
+
+# App Stack
+cd helm/student-api-stack
+rm -rf charts/ Chart.lock
+helm dependency build
+helm install student-api-stack . --namespace student-api --wait --timeout=15m
+
+Cleanup
+To remove everything:
+helm uninstall student-api-stack -n student-api
 helm uninstall external-secrets -n external-secrets
 helm uninstall vault -n vault
+kubectl delete ns student-api vault
 
-kubectl delete ns student-api vault external-secrets
-```
 
----
-
-## Helm Repository Structure
-
-```
+Repo Structure
 helm/
 ├── charts/
 │   ├── vault/
@@ -178,21 +157,36 @@ helm/
 │   ├── secrets-bridge/
 │   ├── postgresql/
 │   └── rest-api/
-└── values/
-    ├── vault-values.yaml
-    ├── external-secrets-values.yaml
-    ├── secrets-bridge-values.yaml
-    ├── postgresql-values.yaml
-    └── rest-api-values.yaml
-```
+├── student-api-stack/                # Umbrella chart
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   ├── charts/                       # Built by helm dependency build
+│   └── templates/
+├── values/                           # Config files
+└── student-api-helm-deploy.md        # This guide
 
-Each component is deployed using its own values file. No Helm CLI flags are used to pass values dynamically. All configuration changes should be made in the corresponding `values/*.yaml` files.
 
----
+Troubleshoot Tips
+Vault Issues
 
-## Final Notes
+Make sure Vault unsealed before deploying ESO or app stack
+Check Vault token permissions
+Verify secrets stored right in Vault
 
-- Order matters. Make sure to follow the exact sequence.
-- Wait for each deployment to stabilize before jumping to the next.
-- If something doesn’t work, check pod logs, secrets, and node selectors.
-- Postman testing should work directly once all components are ready.
+External Secrets Issues
+
+Check ESO pods: kubectl get pods -n student-api -l app.kubernetes.io/name=external-secrets
+Verify CRDs: kubectl get crd | grep external-secrets
+Ensure ESO connect to Vault
+
+App Deployment Issues
+
+Clean dependencies: rm -rf charts/ Chart.lock before helm dependency build
+Check logs: kubectl logs -n student-api <pod-name>
+Verify secrets synced: kubectl describe externalsecret -n student-api
+Make sure database up before API deploy
+
+Resource Conflicts
+
+If see “exists and cannot be imported” error, clean dependencies and rebuild
+Check Chart.yaml in student-api-stack match setup

@@ -10,28 +10,55 @@ on:
     workflow_dispatch:
 
 jobs:
-    test:
+    test-and-release:
         runs-on: self-hosted
 
         env:
-            VERSION: 1.0.0
             IMAGE_NAME: pmgoriya/one2n-sre-bootcamp
-
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+            DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         steps:
             - name: Checkout Code
               uses: actions/checkout@v3
+              with:
+                fetch-depth: 0
 
             - name: Run Linter
               run: make lint
+              working-directory: students_fastapi
 
             - name: Lint Dockerfile
               run: hadolint Dockerfile
 
-            - name: Run build
-              run: docker build -t $IMAGE_NAME:$VERSION .
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                node-version: '16'
 
-            - name: Docker login 
-              run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            - name: Install Semantic Release
+              run: npm install --save-dev semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/exec @semantic-release/git
 
-            - name: Docker push
-              run: docker push $IMAGE_NAME:$VERSION
+            - name: Run Semantic Release
+              run: npx semantic-release
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Get New Version
+              id: get_version
+              run: echo "NEW_VERSION=$(cat package.json | jq -r .version)" >> $GITHUB_OUTPUT
+
+            - name: Build and Push Docker Image
+              run: |
+                docker build -t $IMAGE_NAME:v${{ steps.get_version.outputs.NEW_VERSION }} .
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                docker push $IMAGE_NAME:v${{ steps.get_version.outputs.NEW_VERSION }}
+
+            - name: Update Helm Values
+              run: |
+                sed -i "s|image: pmgoriya/one2n-sre-bootcamp:.*|image: $IMAGE_NAME:v${{ steps.get_version.outputs.NEW_VERSION }}|" helm/student-api-stack/values.yaml
+                git config user.name "GitHub Action"
+                git config user.email "action@github.com"
+                git add helm/student-api-stack/values.yaml
+                git commit -m "chore: update image tag to v${{ steps.get_version.outputs.NEW_VERSION }} [skip ci]"
+                git push

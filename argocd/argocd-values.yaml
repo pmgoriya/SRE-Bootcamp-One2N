@@ -1,0 +1,8 @@
+global:
+  nodeSelector:
+    type: dependent_services
+server:
+  ingress:
+    enabled: true
+    hosts:
+      - argocd.local

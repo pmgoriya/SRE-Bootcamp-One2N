@@ -1,0 +1,12 @@
+dependencies:
+- name: secrets-bridge
+  repository: file://../charts/secrets-bridge
+  version: 0.1.0
+- name: postgresql
+  repository: file://../charts/postgresql
+  version: 16.7.21
+- name: rest-api
+  repository: file://../charts/rest-api
+  version: 0.1.0
+digest: sha256:0169353c9f870a75a17962773bbb9aca415aa30252a7b458b60c168737ed7a40
+generated: "2025-07-31T17:01:57.979293085+05:30"
