@@ -1,4 +1,3 @@
-# dependency for semantic versioning
 {
   "branches": ["master"],
   "plugins": [
