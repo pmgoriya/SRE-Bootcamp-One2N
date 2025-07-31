@@ -9,6 +9,10 @@ on:
             - 'students_fastapi/**'
     workflow_dispatch:
 
+permissions:
+    contents: write
+    actions: read
+
 jobs:
     test-and-release:
         runs-on: self-hosted
