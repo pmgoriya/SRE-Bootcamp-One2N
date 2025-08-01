@@ -1,0 +1,15 @@
+prometheus:
+  namespace: observability 
+
+  server:
+    nodeSelector:
+      type: dependent_services
+  alertManager: 
+    nodeSelector:
+      type: dependent_services
+    enabled: true
+  kubeStateMetrics: 
+    enabled: true
+  nodeExporter:
+    enabled: true
+

@@ -1,0 +1,21 @@
+dependencies:
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts/
+  version: 27.29.0
+- name: grafana
+  repository: https://grafana.github.io/helm-charts
+  version: 9.3.0
+- name: loki
+  repository: https://grafana.github.io/helm-charts
+  version: 6.34.0
+- name: promtail
+  repository: https://grafana.github.io/helm-charts
+  version: 6.17.0
+- name: prometheus-blackbox-exporter
+  repository: https://prometheus-community.github.io/helm-charts/
+  version: 11.2.0
+- name: prometheus-postgres-exporter
+  repository: https://prometheus-community.github.io/helm-charts/
+  version: 7.1.1
+digest: sha256:9de194cc67ae1d566469ea306991443c5b7c5465d8f2680a40df164746bbe278
+generated: "2025-08-01T23:36:53.984190666+05:30"
